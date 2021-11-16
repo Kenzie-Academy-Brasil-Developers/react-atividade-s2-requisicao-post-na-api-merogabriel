@@ -1,5 +1,6 @@
 import "./styles.css";
 import Input from "../Input";
+import Display from "../Display";
 
 import { useForm } from "react-hook-form";
 import * as yup from "yup";
@@ -9,7 +10,8 @@ import { useState } from "react";
 import axios from "axios";
 
 const Login = () => {
-  const [token, setToken] = useState("");
+  const [auth, setAuth] = useState(false);
+  const [bef, setBef] = useState(true);
 
   const schema = yup.object().shape({
     username: yup.string().required("Campo obrigatório"),
@@ -25,40 +27,44 @@ const Login = () => {
   });
 
   const handleSignIn = (user) => {
+    setBef(false);
+
     axios
-      .post("https://kenzieshop.herokuapp.com/sessions/", user, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      .post("https://kenzieshop.herokuapp.com/sessions/", user)
       .then((response) => {
-        const { access, user } = response.data;
-
-        setToken(access);
-
-        localStorage.setItem("@NomeDaAplicação:token", access);
-        localStorage.setItem("@NomeDaAplicação:user", JSON.stringify(user));
+        const { access } = response.data;
+        setAuth(true);
+        window.localStorage.clear();
+        window.localStorage.setItem("@NomeDaAplicação:token", access);
       })
-      .catch((err) => console.log(err));
+      .catch((err) => setAuth(false));
   };
 
   return (
     <div>
-      Login
-      <form onSubmit={handleSubmit(handleSignIn)}>
-        <Input
-          placeholder="Seu username"
-          register={register}
-          name="username"
-          error={errors.email?.message}
-        />
-        <Input
-          placeholder="Sua senha"
-          register={register}
-          name="password"
-          type="password"
-          error={errors.password?.message}
-        />
-        <button type="submit">Login</button>
-      </form>
+      {bef ? (
+        <div>
+          Login
+          <form onSubmit={handleSubmit(handleSignIn)}>
+            <Input
+              placeholder="Seu username"
+              register={register}
+              name="username"
+              error={errors.email?.message}
+            />
+            <Input
+              placeholder="Sua senha"
+              register={register}
+              name="password"
+              type="password"
+              error={errors.password?.message}
+            />
+            <button type="submit">Login</button>
+          </form>
+        </div>
+      ) : (
+        <Display auth={auth}></Display>
+      )}
     </div>
   );
 };
